@@ -33,17 +33,17 @@ class PyAnimeList:
         """ :param search_query: is what'll be queried for results """
         to_encode = {'q': search_query}
         params = urllib.parse.urlencode(to_encode)
-        async with self.session.get(self.BASEURL + 'anime/search.xml', params=params) as resp:
-            if resp.status == 200:
-                return resp
+        async with self.session.get(self.BASEURL + 'anime/search.xml', params=params) as response:
+            if response.status == 200:
+                return response
 
     async def get_manga(self, search_query: str):
         """ :param search_query: is what'll be queried for results """
         to_encode = {'q': search_query}
         params = urllib.parse.urlencode(to_encode)
-        async with self.session.get(self.BASEURL + 'manga/search.xml', params=params) as resp:
-            if resp.status == 200:
-                return resp
+        async with self.session.get(self.BASEURL + 'manga/search.xml', params=params) as response:
+            if response.status == 200:
+                return response
 
     async def add_anime(self, anime_id: int, status, episode=None, score=None, storage_value=None, times_rewatched=None, rewatch_value=None, date_start=None,
                         date_finished=None, priority=None, enable_discussion=None, enable_rewatching=None, comments=None, fansub_group=None, tags=None):
@@ -65,9 +65,9 @@ class PyAnimeList:
         :param tags: Any tags that relate to the anime                                      String, with each tab seperated by a comma
         """
         xml = ''' '''
-        async with self.session.post(self.BASEURL + 'animelist/add/' + (str(anime_id)), data=xml) as resp:
-            if resp.status == 201:
-                return resp.text
+        async with self.session.post(self.BASEURL + 'animelist/add/' + (str(anime_id)), data=xml) as response:
+            if response.status == 200:
+                return response
 
 
 if __name__ == '__main__':
