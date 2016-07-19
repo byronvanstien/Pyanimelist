@@ -1,9 +1,9 @@
-import aiohttp
 import asyncio
-from lxml import etree
 import json
 import urllib
 
+import aiohttp
+from dicttoxml import dicttoxml
 
 with open('setup.json') as file:
     setup = json.load(file)
@@ -36,11 +36,10 @@ class PyAnimeList:
         params = urllib.parse.urlencode(to_encode)
         async with self.session.get(self.BASEURL + 'anime/search.xml', params=params) as response:
             if response.status == 200:
-                to_parse=await response.text()
-                final_data=to_parse
+                to_parse = await response.text()
+                final_data = to_parse
             elif response.status == 204:
-                raise NoContent('No matching content.')
-
+                pass
             return final_data
 
     async def get_manga(self, search_query: str):
@@ -51,16 +50,16 @@ class PyAnimeList:
             if response.status == 200:
                 return await response.text()
 
-    async def add_anime(self, anime_id: int, status, episodes, **kwargs):
+    async def add_anime(self, anime_id: int, status, episodes, score,  **kwargs):
         """
         :param id: id is the id of the anime that we'll be adding to the list               Integer (Required)
-        :param episodes: Latest episode in the series the user has watched                  Integer
+        :param episodes: Latest episode in the series the user has watched                  Integer (Required)
         :param status: If the user is watching an anime, if the anime is on hold ect.       Integer (Required)
         :param score: the score the user gave the anime                                     Integer
         :param storage_type: (Coming once MAL accept string input)                          Integer for some reason
         :param times_rewatched: the amount of times a user has watched an anime             Integer
         :param rewatch_value: Is the show enjoyable x amount of times                       Integer
-        :param date_start: The date the user started the anime                              MMDDYY (I assume integer)
+        :param date_started: The date the user started the anime                            MMDDYY (I assume integer)
         :param date_finished: The date the user finished the anime                          MMDDYY (I assume integer)
         :param priority: How highly an anime is on your to watch list                       Integer
         :param enable_discussion: Yes or no, do you want to be offered to discuss the anime Integer (1 or 0)
@@ -69,18 +68,34 @@ class PyAnimeList:
         :param fansub_group: What fansub group subbed your anime                            String
         :param tags: Any tags that relate to the anime                                      String, with each tab seperated by a comma
         """
-        xml = ''' '''
-        async with self.session.post(self.BASEURL + 'animelist/add/' + (str(anime_id)), data=xml) as response:
-            if response.status == 200:
-                return response
+        anime_values = {
+            'episode': episodes,
+            'status': status,
+            'score': score,
+            'storage_type': kwargs.get('storage_type'),
+            'storage_value': '',
+            'times_rewatched': kwargs.get('times_rewatched'),
+            'rewatch_value': kwargs.get('rewatch_value'),
+            'date_start': kwargs.get('date_started'),
+            'date_finish': kwargs.get('date_finished'),
+            'priority': kwargs.get('priority'),
+            'enable_discussion': kwargs.get('enable_discussion'),
+            'enable_rewatching': kwargs.get('enable_rewatching'),
+            'comments': kwargs.get('comments'),
+            'fansub_group': kwargs.get('fansub_group'),
+            'tags': kwargs.get('tags')
+        }
+        xml = dicttoxml(anime_values, attr_type=False, custom_root='entry')
+        print(xml)
+        async with self.session.post(self.BASEURL + 'animelist/add/' + (str(anime_id)) + '.xml', data=xml) as response:
+            awaited = await response.text()
+            print(awaited)
 
 
 if __name__ == '__main__':
     rip = PyAnimeList()
     getanimu = rip.get_anime('Mahouka koukou no rettousei')
     getmangu = rip.get_manga('mahouka koukou no rettousei')
-    add_animu = rip.add_anime(31764, 1, 0)
+    add_animu = rip.add_anime(31764, 1, 1, 5)
     loop = asyncio.get_event_loop()
-    print(loop.run_until_complete(getanimu))
-    print(loop.run_until_complete(getmangu))
     print(loop.run_until_complete(add_animu))
