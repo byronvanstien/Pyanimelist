@@ -8,6 +8,7 @@ import urllib
 with open('setup.json') as file:
     setup = json.load(file)
 
+
 class PyAnimeList:
 
     BASEURL = 'http://myanimelist.net/api/'
@@ -35,7 +36,12 @@ class PyAnimeList:
         params = urllib.parse.urlencode(to_encode)
         async with self.session.get(self.BASEURL + 'anime/search.xml', params=params) as response:
             if response.status == 200:
-                return response
+                to_parse=await response.text()
+                final_data=to_parse
+            elif response.status == 204:
+                raise NoContent('No matching content.')
+
+            return final_data
 
     async def get_manga(self, search_query: str):
         """ :param search_query: is what'll be queried for results """
@@ -43,13 +49,12 @@ class PyAnimeList:
         params = urllib.parse.urlencode(to_encode)
         async with self.session.get(self.BASEURL + 'manga/search.xml', params=params) as response:
             if response.status == 200:
-                return response
+                return await response.text()
 
-    async def add_anime(self, anime_id: int, status, episode=None, score=None, storage_value=None, times_rewatched=None, rewatch_value=None, date_start=None,
-                        date_finished=None, priority=None, enable_discussion=None, enable_rewatching=None, comments=None, fansub_group=None, tags=None):
+    async def add_anime(self, anime_id: int, status, episodes, **kwargs):
         """
         :param id: id is the id of the anime that we'll be adding to the list               Integer (Required)
-        :param episode: Latest episode in the series the user has watched                   Integer
+        :param episodes: Latest episode in the series the user has watched                  Integer
         :param status: If the user is watching an anime, if the anime is on hold ect.       Integer (Required)
         :param score: the score the user gave the anime                                     Integer
         :param storage_type: (Coming once MAL accept string input)                          Integer for some reason
@@ -74,7 +79,7 @@ if __name__ == '__main__':
     rip = PyAnimeList()
     getanimu = rip.get_anime('Mahouka koukou no rettousei')
     getmangu = rip.get_manga('mahouka koukou no rettousei')
-    add_animu = rip.add_anime(31764, 1)
+    add_animu = rip.add_anime(31764, 1, 0)
     loop = asyncio.get_event_loop()
     print(loop.run_until_complete(getanimu))
     print(loop.run_until_complete(getmangu))
