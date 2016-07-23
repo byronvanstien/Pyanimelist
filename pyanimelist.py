@@ -4,20 +4,15 @@ import urllib
 
 import aiohttp
 from dicttoxml import dicttoxml
+from errors import NoContentFound
+from lxml import etree
 
 with open('setup.json') as file:
     setup = json.load(file)
 
 
 class PyAnimeList:
-
-    BASEURL = 'http://myanimelist.net/api/'
-    STATUS = {
-        'watching': '1',
-        'completed': '2',
-        'onhold': '3',
-        'dropped': '4',
-        'plantowatch': '6'}
+    API_BASE_URL = 'http://myanimelist.net/api/'
 
     def __init__(self, username=setup['username'], password=setup['password']):
         """
@@ -29,30 +24,67 @@ class PyAnimeList:
         self.auth = aiohttp.BasicAuth(login=self.username, password=self.password)
         self.session = aiohttp.ClientSession(auth=self.auth)
 
+    def __del__(self):
+        self.session.close()
 
     async def get_anime(self, search_query: str):
         """ :param search_query: is what'll be queried for results """
         to_encode = {'q': search_query}
         params = urllib.parse.urlencode(to_encode)
-        async with self.session.get(self.BASEURL + 'anime/search.xml', params=params) as response:
+        async with self.session.get(self.API_BASE_URL + 'anime/search.xml', params=params) as response:
             if response.status == 200:
-                to_parse = await response.text()
-                final_data = to_parse
+                response_data = await response.read()
+                to_parse = etree.fromstring(response_data)
+                entry = to_parse[0]
+                return_data = {
+                    'id': entry.find('id').text,
+                    'title': entry.find('title').text,
+                    'english': entry.find('english').text,
+                    'synonyms': entry.find('synonyms').text,
+                    'episodes': entry.find('episodes').text,
+                    'type': entry.find('type').text,
+                    'status': entry.find('status').text,
+                    'start_date': entry.find('start_date').text,
+                    'end_date': entry.find('end_date').text,
+                    'synopsis': entry.find('synopsis').text.replace('[i]', '').replace('[/i]', '').replace('<br />',
+                                                                                                           ''),
+                    'image': entry.find('image').text
+                }
+                return return_data
             elif response.status == 204:
-                pass
-            return final_data
+                raise NoContentFound("Anime not found")
 
     async def get_manga(self, search_query: str):
         """ :param search_query: is what'll be queried for results """
         to_encode = {'q': search_query}
         params = urllib.parse.urlencode(to_encode)
-        async with self.session.get(self.BASEURL + 'manga/search.xml', params=params) as response:
+        async with self.session.get(self.API_BASE_URL + 'manga/search.xml', params=params) as response:
             if response.status == 200:
-                return await response.text()
+                response_data = await response.read()
+                to_parse = etree.fromstring(response_data)
+                manga_entry = to_parse[0]
+                return_data = {
+                    'id': manga_entry.find('id').text,
+                    'title': manga_entry.find('title').text,
+                    'english': manga_entry.find('english').text,
+                    'synonyms': manga_entry.find('synonyms').text,
+                    'volumes': manga_entry.find('volumes').text,
+                    'chapters': manga_entry.find('chapters').text,
+                    'type': manga_entry.find('type').text,
+                    'status': manga_entry.find('status').text,
+                    'start_date': manga_entry.find('start_date').text,
+                    'end_date': manga_entry.find('end_date').text,
+                    'synopsis': manga_entry.find('synopsis').text.replace('[i]', '').replace('[/i]', '').replace(
+                        '<br />', ''),
+                    'image': manga_entry.find('image').text
+                }
+                return return_data
+            elif response.status == 204:
+                raise NoContentFound("Manga not found")
 
-    async def add_anime(self, anime_id: int, status, episodes, score,  **kwargs):
+    async def add_anime(self, anime_id: int, status, episodes, score, **kwargs):
         """
-        :param id: id is the id of the anime that we'll be adding to the list               Integer (Required)
+        :param anime_id: id is the id of the anime that we'll be adding to the list               Integer (Required)
         :param episodes: Latest episode in the series the user has watched                  Integer (Required)
         :param status: If the user is watching an anime, if the anime is on hold ect.       Integer (Required)
         :param score: the score the user gave the anime                                     Integer
@@ -85,17 +117,18 @@ class PyAnimeList:
             'fansub_group': kwargs.get('fansub_group'),
             'tags': kwargs.get('tags')
         }
-        xml = dicttoxml(anime_values, attr_type=False, custom_root='entry')
-        print(xml)
-        async with self.session.post(self.BASEURL + 'animelist/add/' + (str(anime_id)) + '.xml', data=xml) as response:
+        xml = dicttoxml(anime_values, attr_type=False, custom_root='anime')
+        async with self.session.post(self.API_BASE_URL + 'animelist/add/' + (str(anime_id)) + '.xml',
+                                     data=xml) as response:
             awaited = await response.text()
             print(awaited)
 
 
 if __name__ == '__main__':
     rip = PyAnimeList()
-    getanimu = rip.get_anime('Mahouka koukou no rettousei')
-    getmangu = rip.get_manga('mahouka koukou no rettousei')
+    getanimu = rip.get_anime('Mahouka Koukou no Rettousei')
+    getmangu = rip.get_manga('Mahouka Koukou no Rettousei')
     add_animu = rip.add_anime(31764, 1, 1, 5)
     loop = asyncio.get_event_loop()
+    print(loop.run_until_complete(getmangu))
     print(loop.run_until_complete(add_animu))

@@ -1,0 +1,2 @@
+class NoContentFound(Exception):
+    pass
