@@ -4,11 +4,14 @@ import urllib
 
 import aiohttp
 from dicttoxml import dicttoxml
-from errors import NoContentFound
+from errors import NoContentException, InvalidInputException
 from lxml import etree
 
-with open('setup.json') as file:
-    setup = json.load(file)
+try:
+    with open('setup.json') as file:
+        setup = json.load(file)
+except:
+    pass
 
 
 class PyAnimeList:
@@ -26,6 +29,13 @@ class PyAnimeList:
 
     def __del__(self):
         self.session.close()
+
+    async def verify_credentials(self):
+        async with self.session.get(self.API_BASE_URL + 'account/verify_credentials.xml') as response:
+            if response.status == 200:
+                return True
+            elif response.status == 204:
+                raise NoContentException
 
     async def get_anime(self, search_query: str):
         """ :param search_query: is what'll be queried for results """
@@ -76,19 +86,19 @@ class PyAnimeList:
                     'end_date': manga_entry.find('end_date').text,
                     'synopsis': manga_entry.find('synopsis').text.replace('[i]', '').replace('[/i]', '').replace(
                         '<br />', ''),
-                    'image': manga_entry.find('image').text
+                    'image': manga_entry.find('image').text,
                 }
                 return return_data
             elif response.status == 204:
                 raise NoContentFound("Manga not found")
 
-    async def add_anime(self, anime_id: int, status, episodes, score, **kwargs):
+    async def add_anime(self, anime_id: int, status, **kwargs):
         """
-        :param anime_id: id is the id of the anime that we'll be adding to the list               Integer (Required)
-        :param episodes: Latest episode in the series the user has watched                  Integer (Required)
-        :param status: If the user is watching an anime, if the anime is on hold ect.       Integer (Required)
+        :param anime_id: id is the id of the anime that we'll be adding to the list         Integer (Required)
+        :param episodes: Latest episode in the series the user has watched                  Integer
+        :param status: If the user is watching an anime, if the anime is on hold ect.       Integer
         :param score: the score the user gave the anime                                     Integer
-        :param storage_type: (Coming once MAL accept string input)                          Integer for some reason
+        :param storage_type: (Coming once MAL accept string input)                          Integer
         :param times_rewatched: the amount of times a user has watched an anime             Integer
         :param rewatch_value: Is the show enjoyable x amount of times                       Integer
         :param date_started: The date the user started the anime                            MMDDYY (I assume integer)
@@ -101,11 +111,11 @@ class PyAnimeList:
         :param tags: Any tags that relate to the anime                                      String, with each tab seperated by a comma
         """
         anime_values = {
-            'episode': episodes,
+            'episode': kwargs.get('episodes'),
             'status': status,
-            'score': score,
+            'score': kwargs.get('score'),
             'storage_type': kwargs.get('storage_type'),
-            'storage_value': '',
+            'storage_value': kwargs.get('storage_value'),
             'times_rewatched': kwargs.get('times_rewatched'),
             'rewatch_value': kwargs.get('rewatch_value'),
             'date_start': kwargs.get('date_started'),
@@ -117,18 +127,65 @@ class PyAnimeList:
             'fansub_group': kwargs.get('fansub_group'),
             'tags': kwargs.get('tags')
         }
-        xml = dicttoxml(anime_values, attr_type=False, custom_root='anime')
-        async with self.session.post(self.API_BASE_URL + 'animelist/add/' + (str(anime_id)) + '.xml',
-                                     data=xml) as response:
-            awaited = await response.text()
-            print(awaited)
+        xml = dicttoxml(anime_values, attr_type=False, custom_root='entry')
+        params = {'data': xml}
+        params = urllib.parse.urlencode(params)
+        async with self.session.get(self.API_BASE_URL + 'animelist/add/' + (str(anime_id)) + '.xml', params=params) as response:
+            if response.status == 201:
+                return True
+            else:
+                raise InvalidInputException
 
+    async def add_manga(self, manga_id: int, status, **kwargs):
+        """
+        :param manga_id:
+        :param status:
+        :param chapter: How many read chapters
+        :param volumes: How many read volumes
+        :param status: If currently reading, on hold ect
+        :param score: Score user is giving the manga
+        :param times_reread: How many times the user has read the series
+        :param reread_value: How rereadable a manga is
+        :param date_start: What date the user started reading
+        :param date_finish: What date the user finished the manga
+        :param priority: How highly the user wants to read the manga
+        :param enable_discussion: If you want to be offered to discuss the manga or not
+        :param enable_rereading: If you're currently rereading the manga
+        :param comments: A comment to leave for the manga
+        :param scan_group: What groups scans you're reading
+        :param tags: Tags related to the novel, seperated by comma
+        :param retail_volumes: How many volumes you own
+        """
+        manga_values = {
+            'status': status,
+            'chapter': kwargs.get('chapter'),
+            'volumes': kwargs.get('volumes'),
+            'score': kwargs.get('score'),
+            'times_reread': kwargs.get('times_reread'),
+            'reread_value': kwargs.get('reread_value'),
+            'date_start': kwargs.get('date_start'),
+            'date_finish': kwargs.get('date_finish'),
+            'priority': kwargs.get('priority'),
+            'enable_discussion': kwargs.get('enable_discussion'),
+            'enable_rereading': kwargs.get('enable_rereading'),
+            'comments': kwargs.get('comments'),
+            'scan_group': kwargs.get('scan_group'),
+            'tags': kwargs.get('tags'),
+            'retail_volumes': kwargs.get('retail_volumes')
+        }
+        xml_manga_values = dicttoxml(manga_values, attr_type=False, custom_root='entry')
+        params = {'data': xml_manga_values}
+        params = urllib.parse.urlencode(params)
+        async with self.session.get(self.API_BASE_URL + 'mangalist/add/' + str(manga_id) + '.xml', params=params) as response:
+            if response.status == 201:
+                return True
+            else:
+                raise InvalidInputException
 
 if __name__ == '__main__':
     rip = PyAnimeList()
-    getanimu = rip.get_anime('Mahouka Koukou no Rettousei')
-    getmangu = rip.get_manga('Mahouka Koukou no Rettousei')
-    add_animu = rip.add_anime(31764, 1, 1, 5)
+    add_animu = rip.add_manga(30015, '1')
+    verify = rip.verify_credentials()
     loop = asyncio.get_event_loop()
-    print(loop.run_until_complete(getmangu))
+    print(loop.run_until_complete(verify))
     print(loop.run_until_complete(add_animu))
