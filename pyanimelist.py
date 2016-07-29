@@ -1,8 +1,10 @@
 import asyncio
 import json
 import urllib
+from datetime import datetime
 
 import aiohttp
+import bs4
 from dicttoxml import dicttoxml
 from lxml import etree
 
@@ -15,8 +17,8 @@ except:
 
 class PyAnimeList:
 
-    API_BASE_URL = 'http://myanimelist.net/api/'
-    MAL_APP_INFO = 'http://myanimelist.net/malappinfo.php'
+    __API_BASE_URL = 'http://myanimelist.net/api/'
+    __MAL_APP_INFO = 'http://myanimelist.net/malappinfo.php'
     __version__ = 1.0
 
     def __init__(self, username=setup['username'], password=setup['password'],
@@ -29,16 +31,16 @@ class PyAnimeList:
         """
         if user_agent is None:
             self.user_agent = {'User-Agent': 'PyAnimeList/' + str(self.__version__)}
-        self.username = username
-        self.password = password
-        self.auth = aiohttp.BasicAuth(login=self.username, password=self.password)
-        self.session = aiohttp.ClientSession(auth=self.auth, headers=self.user_agent)
+        self.__username = username
+        self.__password = password
+        self.__auth = aiohttp.BasicAuth(login=self.__username, password=self.__password)
+        self.session = aiohttp.ClientSession(auth=self.__auth, headers=self.user_agent)
 
     def __del__(self):
         self.session.close()
 
     async def verify_credentials(self):
-        async with self.session.get(self.API_BASE_URL + 'account/verify_credentials.xml') as response:
+        async with self.session.get(self.__API_BASE_URL + 'account/verify_credentials.xml') as response:
             if response.status == 200:
                 response_data = await response.read()
                 to_parse = etree.fromstring(response_data)
@@ -53,7 +55,7 @@ class PyAnimeList:
         """ :param search_query: is what'll be queried for results """
         to_encode = {'q': search_query}
         params = urllib.parse.urlencode(to_encode)
-        async with self.session.get(self.API_BASE_URL + 'anime/search.xml', params=params) as response:
+        async with self.session.get(self.__API_BASE_URL + 'anime/search.xml', params=params) as response:
             if response.status == 200:
                 response_data = await response.read()
                 to_parse = etree.fromstring(response_data)
@@ -80,7 +82,7 @@ class PyAnimeList:
         """ :param search_query: is what'll be queried for results """
         to_encode = {'q': search_query}
         params = urllib.parse.urlencode(to_encode)
-        async with self.session.get(self.API_BASE_URL + 'manga/search.xml', params=params) as response:
+        async with self.session.get(self.__API_BASE_URL + 'manga/search.xml', params=params) as response:
             if response.status == 200:
                 response_data = await response.read()
                 to_parse = etree.fromstring(response_data)
@@ -142,7 +144,7 @@ class PyAnimeList:
         xml = dicttoxml(anime_values, attr_type=False, custom_root='entry')
         params = {'data': xml}
         params = urllib.parse.urlencode(params)
-        async with self.session.get(self.API_BASE_URL + 'animelist/add/' + (str(anime_id)) + '.xml',
+        async with self.session.get(self.__API_BASE_URL + 'animelist/add/' + (str(anime_id)) + '.xml',
                                     params=params) as response:
             if response.status == 201:
                 return True
@@ -189,13 +191,12 @@ class PyAnimeList:
         xml_manga_values = dicttoxml(manga_values, attr_type=False, custom_root='entry')
         params = {'data': xml_manga_values}
         params = urllib.parse.urlencode(params)
-        async with self.session.get(self.API_BASE_URL + 'mangalist/add/' + str(manga_id) + '.xml',
+        async with self.session.get(self.__API_BASE_URL + 'mangalist/add/' + str(manga_id) + '.xml',
                                     params=params) as response:
             if response.status == 201:
                 return True
             else:
                 return False
-
 
     async def update_anime(self, anime_id: int, status, **kwargs):
         """
@@ -235,13 +236,12 @@ class PyAnimeList:
         xml = dicttoxml(anime_values, attr_type=False, custom_root='entry')
         params = {'data': xml}
         params = urllib.parse.urlencode(params)
-        async with self.session.get(self.API_BASE_URL + 'animelist/update/' + (str(anime_id)) + '.xml',
+        async with self.session.get(self.__API_BASE_URL + 'animelist/update/' + (str(anime_id)) + '.xml',
                                     params=params) as response:
             if response.status == 200:
                 return True
             else:
                 return False
-
 
     async def update_manga(self, manga_id: int, status, **kwargs):
         """
@@ -283,7 +283,7 @@ class PyAnimeList:
         xml_manga_values = dicttoxml(manga_values, attr_type=False, custom_root='entry')
         params = {'data': xml_manga_values}
         params = urllib.parse.urlencode(params)
-        async with self.session.get(self.API_BASE_URL + 'mangalist/update/' + str(manga_id) + '.xml',
+        async with self.session.get(self.__API_BASE_URL + 'mangalist/update/' + str(manga_id) + '.xml',
                                     params=params) as response:
             if response.status == 200:
                 return True
@@ -291,7 +291,7 @@ class PyAnimeList:
                 return False
 
     async def delete_anime(self, anime_id: int):
-        async with self.session.get(self.API_BASE_URL + 'animelist/delete/' + str(anime_id) + '.xml') as response:
+        async with self.session.get(self.__API_BASE_URL + 'animelist/delete/' + str(anime_id) + '.xml') as response:
             try:
                 if response.status == 200:
                     return True
@@ -299,7 +299,7 @@ class PyAnimeList:
                 print(e)
 
     async def delete_manga(self, manga_id: int):
-        async with self.session.get(self.API_BASE_URL + 'mangalist/delete/' + str(manga_id) + '.xml') as response:
+        async with self.session.get(self.__API_BASE_URL + 'mangalist/delete/' + str(manga_id) + '.xml') as response:
             try:
                 if response.status == 200:
                     return True
@@ -313,7 +313,7 @@ class PyAnimeList:
             'status': 'all'
         }
         params = urllib.parse.urlencode(params)
-        async with self.session.get(self.MAL_APP_INFO, params=params) as response:
+        async with self.session.get(self.__MAL_APP_INFO, params=params) as response:
             if response.status == 200:
                 response_data = await response.read()
                 to_parse = etree.fromstring(response_data)
@@ -323,9 +323,35 @@ class PyAnimeList:
                 elif series_type == 'manga':
                     pass
 
+    def process_(self, child):
+        name, text = child.name, child.get_text()
+        try:
+            text = int(text)
+        except ValueError:
+            pass
+        if name == 'my_last_updated':
+            text = datetime.fromtimestamp(float(text))
+        if name in ['my_finish_date', 'my_start_date', 'series_end', 'series_start']:
+            try:
+                text = datetime.strptime(text, "%Y-%m-%d")
+            except ValueError:
+                text = datetime.fromtimestamp(0)
+        return name, text
+
+    async def get_user_anime(self, profile: str, series_type: str):
+        params = urllib.parse.urlencode({
+            'u': profile,
+            'status': 'all',
+            'type': series_type
+        })
+        async with self.session.get(
+                self.__MAL_APP_INFO, params=params) as response:
+            soup = bs4.BeautifulSoup(await response.text(), "lxml")
+        return [dict(self.process_(child) for child in anime.children) for anime in soup.find_all('anime')]
+
     async def get_public_user_data(self, username: str):
         params = urllib.parse.urlencode({'u': username})
-        async with self.session.get(self.MAL_APP_INFO, params=params) as response:
+        async with self.session.get(self.__MAL_APP_INFO, params=params) as response:
             if response.status == 200:
                 response_data = await response.read()
                 to_parse = etree.fromstring(response_data)
@@ -337,4 +363,5 @@ if __name__ == '__main__':
     rip = PyAnimeList()
     loop = asyncio.get_event_loop()
     print(loop.run_until_complete(rip.get_public_user_data('GetRektByMe')))
+    print(loop.run_until_complete(rip.get_user_anime('GetRektByMe', 'anime')))
 
