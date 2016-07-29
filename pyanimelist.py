@@ -16,6 +16,7 @@ except:
 class PyAnimeList:
 
     API_BASE_URL = 'http://myanimelist.net/api/'
+    MAL_APP_INFO = 'http://myanimelist.net/malappinfo.php'
     __version__ = 1.0
 
     def __init__(self, username=setup['username'], password=setup['password'],
@@ -305,8 +306,35 @@ class PyAnimeList:
             except Exception as e:
                 print(e)
 
+    async def get_user_series(self, username: str, series_type: str):
+        params = {
+            'u': username,
+            'type': series_type,
+            'status': 'all'
+        }
+        params = urllib.parse.urlencode(params)
+        async with self.session.get(self.MAL_APP_INFO, params=params) as response:
+            if response.status == 200:
+                response_data = await response.read()
+                to_parse = etree.fromstring(response_data)
+                data = to_parse
+                if series_type == 'anime':
+                    pass
+                elif series_type == 'manga':
+                    pass
+
+    async def get_public_user_data(self, username: str):
+        params = urllib.parse.urlencode({'u': username})
+        async with self.session.get(self.MAL_APP_INFO, params=params) as response:
+            if response.status == 200:
+                response_data = await response.read()
+                to_parse = etree.fromstring(response_data)
+                data = to_parse[0]
+                final_userinfo = dict(zip(['user_id', 'username', 'watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch', 'days_spent_watching'], [x.text for x in data]))
+                return final_userinfo
+
 if __name__ == '__main__':
     rip = PyAnimeList()
-    verify = rip.verify_credentials()
     loop = asyncio.get_event_loop()
-    print(loop.run_until_complete(verify))
+    print(loop.run_until_complete(rip.get_public_user_data('GetRektByMe')))
+
