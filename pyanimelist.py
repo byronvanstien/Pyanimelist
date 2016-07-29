@@ -11,12 +11,11 @@ from lxml import etree
 try:
     with open('setup.json') as file:
         setup = json.load(file)
-except:
+except FileNotFoundError:
     pass
 
 
 class PyAnimeList:
-
     __API_BASE_URL = 'http://myanimelist.net/api/'
     __MAL_APP_INFO = 'http://myanimelist.net/malappinfo.php'
     __version__ = 1.0
@@ -53,8 +52,7 @@ class PyAnimeList:
 
     async def get_anime(self, search_query: str):
         """ :param search_query: is what'll be queried for results """
-        to_encode = {'q': search_query}
-        params = urllib.parse.urlencode(to_encode)
+        params = urllib.parse.urlencode({'q': search_query})
         async with self.session.get(self.__API_BASE_URL + 'anime/search.xml', params=params) as response:
             if response.status == 200:
                 response_data = await response.read()
@@ -80,8 +78,7 @@ class PyAnimeList:
 
     async def get_manga(self, search_query: str):
         """ :param search_query: is what'll be queried for results """
-        to_encode = {'q': search_query}
-        params = urllib.parse.urlencode(to_encode)
+        params = urllib.parse.urlencode({'q': search_query})
         async with self.session.get(self.__API_BASE_URL + 'manga/search.xml', params=params) as response:
             if response.status == 200:
                 response_data = await response.read()
@@ -142,8 +139,7 @@ class PyAnimeList:
             'tags': kwargs.get('tags')
         }
         xml = dicttoxml(anime_values, attr_type=False, custom_root='entry')
-        params = {'data': xml}
-        params = urllib.parse.urlencode(params)
+        params = urllib.parse.urlencode({'data': xml})
         async with self.session.get(self.__API_BASE_URL + 'animelist/add/' + (str(anime_id)) + '.xml',
                                     params=params) as response:
             if response.status == 201:
@@ -189,8 +185,7 @@ class PyAnimeList:
             'retail_volumes': kwargs.get('retail_volumes')
         }
         xml_manga_values = dicttoxml(manga_values, attr_type=False, custom_root='entry')
-        params = {'data': xml_manga_values}
-        params = urllib.parse.urlencode(params)
+        params = urllib.parse.urlencode({'data': xml_manga_values})
         async with self.session.get(self.__API_BASE_URL + 'mangalist/add/' + str(manga_id) + '.xml',
                                     params=params) as response:
             if response.status == 201:
@@ -234,8 +229,7 @@ class PyAnimeList:
             'tags': kwargs.get('tags')
         }
         xml = dicttoxml(anime_values, attr_type=False, custom_root='entry')
-        params = {'data': xml}
-        params = urllib.parse.urlencode(params)
+        params = urllib.parse.urlencode({'data': xml})
         async with self.session.get(self.__API_BASE_URL + 'animelist/update/' + (str(anime_id)) + '.xml',
                                     params=params) as response:
             if response.status == 200:
@@ -281,8 +275,7 @@ class PyAnimeList:
             'retail_volumes': kwargs.get('retail_volumes')
         }
         xml_manga_values = dicttoxml(manga_values, attr_type=False, custom_root='entry')
-        params = {'data': xml_manga_values}
-        params = urllib.parse.urlencode(params)
+        params = urllib.parse.urlencode({'data': xml_manga_values})
         async with self.session.get(self.__API_BASE_URL + 'mangalist/update/' + str(manga_id) + '.xml',
                                     params=params) as response:
             if response.status == 200:
@@ -306,7 +299,8 @@ class PyAnimeList:
             except Exception as e:
                 print(e)
 
-    def process_(self, child):
+    @staticmethod
+    def process_(child):
         name, text = child.name, child.get_text()
         try:
             text = int(text)
@@ -337,7 +331,6 @@ class PyAnimeList:
                 soup = bs4.BeautifulSoup(await response.text(), "lxml")
                 return [dict(self.process_(child) for child in manga.children) for manga in soup.find_all('manga')]
 
-
     async def get_public_user_data(self, username: str):
         params = urllib.parse.urlencode({'u': username})
         async with self.session.get(self.__MAL_APP_INFO, params=params) as response:
@@ -345,12 +338,12 @@ class PyAnimeList:
                 response_data = await response.read()
                 to_parse = etree.fromstring(response_data)
                 data = to_parse[0]
-                final_userinfo = dict(zip(['user_id', 'username', 'watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch', 'days_spent_watching'], [x.text for x in data]))
-                return final_userinfo
+                return dict(zip(['user_id', 'username', 'watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch',
+                                 'days_spent_watching'], [x.text for x in data]))
+
 
 if __name__ == '__main__':
     rip = PyAnimeList()
     loop = asyncio.get_event_loop()
     print(loop.run_until_complete(rip.get_public_user_data('GetRektByMe')))
     print(loop.run_until_complete(rip.get_user_series('GetRektByMe', 'manga')))
-
