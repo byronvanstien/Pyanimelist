@@ -338,16 +338,22 @@ class PyAnimeList:
                 text = datetime.fromtimestamp(0)
         return name, text
 
-    async def get_user_anime(self, profile: str, series_type: str):
+    async def get_user_series(self, profile: str, series_type: str):
         params = urllib.parse.urlencode({
             'u': profile,
             'status': 'all',
             'type': series_type
         })
-        async with self.session.get(
-                self.__MAL_APP_INFO, params=params) as response:
-            soup = bs4.BeautifulSoup(await response.text(), "lxml")
-        return [dict(self.process_(child) for child in anime.children) for anime in soup.find_all('anime')]
+        if series_type == 'anime':
+            async with self.session.get(
+                    self.__MAL_APP_INFO, params=params) as response:
+                soup = bs4.BeautifulSoup(await response.text(), "lxml")
+            return [dict(self.process_(child) for child in anime.children) for anime in soup.find_all('anime')]
+        elif series_type == 'manga':
+            async with self.session.get(self.__MAL_APP_INFO, params=params) as response:
+                soup = bs4.BeautifulSoup(await response.text(), "lxml")
+                return [dict(self.process_(child) for child in manga.children) for manga in soup.find_all('manga')]
+
 
     async def get_public_user_data(self, username: str):
         params = urllib.parse.urlencode({'u': username})
@@ -363,5 +369,5 @@ if __name__ == '__main__':
     rip = PyAnimeList()
     loop = asyncio.get_event_loop()
     print(loop.run_until_complete(rip.get_public_user_data('GetRektByMe')))
-    print(loop.run_until_complete(rip.get_user_anime('GetRektByMe', 'anime')))
+    print(loop.run_until_complete(rip.get_user_series('GetRektByMe', 'manga')))
 
