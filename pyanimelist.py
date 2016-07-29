@@ -306,23 +306,6 @@ class PyAnimeList:
             except Exception as e:
                 print(e)
 
-    async def get_user_series(self, username: str, series_type: str):
-        params = {
-            'u': username,
-            'type': series_type,
-            'status': 'all'
-        }
-        params = urllib.parse.urlencode(params)
-        async with self.session.get(self.__MAL_APP_INFO, params=params) as response:
-            if response.status == 200:
-                response_data = await response.read()
-                to_parse = etree.fromstring(response_data)
-                data = to_parse
-                if series_type == 'anime':
-                    pass
-                elif series_type == 'manga':
-                    pass
-
     def process_(self, child):
         name, text = child.name, child.get_text()
         try:
