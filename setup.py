@@ -2,8 +2,8 @@ from setuptools import setup
 
 setup(
     name='PyAnimeList',
-    version='1.0.0',
-    packages=['PyAnimeList'],
+    version='1.0',
+    packages=[],
     url='https://github.com/GetRektByMe/PyAnimeList',
     license='MIT',
     author='Recchan',
@@ -19,5 +19,5 @@ setup(
         'Topic :: Software Development :: Libraries'
     ],
     keywords="NovelUpdates asyncio aiohttp scraping",
-    install_requires=['aiohttp', 'bs4','lxml'],
+    install_requires=['aiohttp', 'bs4', 'lxml', 'dicttoxml'],
 )
