@@ -1,4 +1,4 @@
-import asyncio
+# Imports
 import json
 import urllib
 from datetime import datetime
@@ -6,6 +6,7 @@ from datetime import datetime
 import aiohttp
 import bs4
 from dicttoxml import dicttoxml
+from errors import NoContentException, NotAddedException
 from lxml import etree
 
 try:
@@ -16,8 +17,11 @@ except FileNotFoundError:
 
 
 class PyAnimeList:
+    # The base url for the API
     __API_BASE_URL = 'http://myanimelist.net/api/'
+    # Information for individual users
     __MAL_APP_INFO = 'http://myanimelist.net/malappinfo.php'
+    # Version of PyAnimeList
     __version__ = 1.0
 
     def __init__(self, username=setup['username'], password=setup['password'],
@@ -28,36 +32,41 @@ class PyAnimeList:
         :param user_agent: useragent of the application, defaults to PyAnimeList/VersionNumber unless explicitly passed
         through the keyword argument
         """
+        # Set default User-Agent
         if user_agent is None:
             self.user_agent = {'User-Agent': 'PyAnimeList/' + str(self.__version__)}
-        self.__username = username
+        self._username = username
         self.__password = password
-        self.__auth = aiohttp.BasicAuth(login=self.__username, password=self.__password)
+        self.__auth = aiohttp.BasicAuth(login=self._username, password=self.__password)
         self.session = aiohttp.ClientSession(auth=self.__auth, headers=self.user_agent)
 
+    # Get rid of unclosed client session error
     def __del__(self):
         self.session.close()
 
+    # Verifies credentials
     async def verify_credentials(self):
         async with self.session.get(self.__API_BASE_URL + 'account/verify_credentials.xml') as response:
             if response.status == 200:
                 response_data = await response.read()
                 to_parse = etree.fromstring(response_data)
                 user = to_parse
-                return_data = {
-                    'id': user.find('id').text,
-                    'username': user.find('username').text
-                }
-                return return_data
 
+                # Returns the username and id in tuple
+                return user.find('id').text, user.find('username').text
+            else:
+                raise aiohttp.ClientResponseError()
+
+    # Gets the anime that is searched for
     async def get_anime(self, search_query: str):
         """ :param search_query: is what'll be queried for results """
+        # Params
         params = urllib.parse.urlencode({'q': search_query})
         async with self.session.get(self.__API_BASE_URL + 'anime/search.xml', params=params) as response:
             if response.status == 200:
                 response_data = await response.read()
-                to_parse = etree.fromstring(response_data)
-                entry = to_parse[0]
+                entry = etree.fromstring(response_data)[0]
+                #Anime values for dicttoxml
                 return_data = {
                     'id': entry.find('id').text,
                     'title': entry.find('title').text,
@@ -74,7 +83,7 @@ class PyAnimeList:
                 }
                 return return_data
             elif response.status == 204:
-                raise NoContentFound("Anime not found")
+                raise NoContentException("Anime not found")
 
     async def get_manga(self, search_query: str):
         """ :param search_query: is what'll be queried for results """
@@ -82,8 +91,7 @@ class PyAnimeList:
         async with self.session.get(self.__API_BASE_URL + 'manga/search.xml', params=params) as response:
             if response.status == 200:
                 response_data = await response.read()
-                to_parse = etree.fromstring(response_data)
-                manga_entry = to_parse[0]
+                manga_entry = etree.fromstring(response_data)[0]
                 return_data = {
                     'id': manga_entry.find('id').text,
                     'title': manga_entry.find('title').text,
@@ -101,7 +109,7 @@ class PyAnimeList:
                 }
                 return return_data
             elif response.status == 204:
-                raise NoContentFound("Manga not found")
+                raise NoContentException("Manga not found")
 
     async def add_anime(self, anime_id: int, status, **kwargs):
         """
@@ -143,9 +151,13 @@ class PyAnimeList:
         async with self.session.get(self.__API_BASE_URL + 'animelist/add/' + (str(anime_id)) + '.xml',
                                     params=params) as response:
             if response.status == 201:
-                return True
+                soup = bs4.BeautifulSoup(await response.text(), 'lxml')
+                if soup.find('h1').string == 'Created':
+                    return soup.find('h1').string
+                else:
+                    raise NotAddedException()
             else:
-                return False
+                raise aiohttp.ClientResponseError()
 
     async def add_manga(self, manga_id: int, status, **kwargs):
         """
@@ -189,9 +201,10 @@ class PyAnimeList:
         async with self.session.get(self.__API_BASE_URL + 'mangalist/add/' + str(manga_id) + '.xml',
                                     params=params) as response:
             if response.status == 201:
-                return True
+                soup = bs4.BeautifulSoup(await response.text(), 'lxml')
+                return soup.find('h1').string
             else:
-                return False
+                raise aiohttp.ClientResponseError()
 
     async def update_anime(self, anime_id: int, status, **kwargs):
         """
@@ -211,6 +224,7 @@ class PyAnimeList:
         :param fansub_group: What fansub group subbed your anime                            String
         :param tags: Any tags that relate to the anime                                      String, with each tab seperated by a comma
         """
+        # Anime values in dict for dicttoxml
         anime_values = {
             'episode': kwargs.get('episodes'),
             'status': status,
@@ -233,9 +247,10 @@ class PyAnimeList:
         async with self.session.get(self.__API_BASE_URL + 'animelist/update/' + (str(anime_id)) + '.xml',
                                     params=params) as response:
             if response.status == 200:
-                return True
+                response.text = await response.text()
+                return response.text
             else:
-                return False
+                raise aiohttp.ClientResponseError()
 
     async def update_manga(self, manga_id: int, status, **kwargs):
         """
@@ -257,6 +272,7 @@ class PyAnimeList:
         :param tags: Tags related to the novel, seperated by comma
         :param retail_volumes: How many volumes you own
         """
+        # Store manga values to a dictionary for dicttoxml
         manga_values = {
             'status': status,
             'chapter': kwargs.get('chapter'),
@@ -279,26 +295,26 @@ class PyAnimeList:
         async with self.session.get(self.__API_BASE_URL + 'mangalist/update/' + str(manga_id) + '.xml',
                                     params=params) as response:
             if response.status == 200:
-                return True
+                response.text = await response.text()
+                return response.text
             else:
-                return False
+                raise aiohttp.ClientResponseError()
 
     async def delete_anime(self, anime_id: int):
         async with self.session.get(self.__API_BASE_URL + 'animelist/delete/' + str(anime_id) + '.xml') as response:
-            try:
-                if response.status == 200:
-                    return True
-            except Exception as e:
-                print(e)
+            if response.status == 200:
+                response.text = await response.text()
+                return response.text
 
     async def delete_manga(self, manga_id: int):
         async with self.session.get(self.__API_BASE_URL + 'mangalist/delete/' + str(manga_id) + '.xml') as response:
-            try:
-                if response.status == 200:
-                    return True
-            except Exception as e:
-                print(e)
+            if response.status == 200:
+                response.text = await response.text()
+                return response.text
+            else:
+                raise aiohttp.ClientResponseError()
 
+    # Zeta wrote this bit
     @staticmethod
     def process_(child):
         name, text = child.name, child.get_text()
@@ -316,34 +332,37 @@ class PyAnimeList:
         return name, text
 
     async def get_user_series(self, profile: str, series_type: str):
+        # Params for the url
         params = urllib.parse.urlencode({
             'u': profile,
             'status': 'all',
             'type': series_type
         })
+        # If series_type == anime
         if series_type == 'anime':
             async with self.session.get(
                     self.__MAL_APP_INFO, params=params) as response:
                 soup = bs4.BeautifulSoup(await response.text(), "lxml")
-            return [dict(self.process_(child) for child in anime.children) for anime in soup.find_all('anime')]
+            # Return as a dictionary
+                return [dict(self.process_(child) for child in anime.children) for anime in soup.find_all('anime')]
+        # If series_type == manga
         elif series_type == 'manga':
             async with self.session.get(self.__MAL_APP_INFO, params=params) as response:
                 soup = bs4.BeautifulSoup(await response.text(), "lxml")
+                # Return as a dictionary
                 return [dict(self.process_(child) for child in manga.children) for manga in soup.find_all('manga')]
+    # End of bit Zeta wrote
 
     async def get_public_user_data(self, username: str):
+        # Params for url
         params = urllib.parse.urlencode({'u': username})
         async with self.session.get(self.__MAL_APP_INFO, params=params) as response:
+
+            # If the response is 200 OK
             if response.status == 200:
                 response_data = await response.read()
-                to_parse = etree.fromstring(response_data)
-                data = to_parse[0]
+                to_parse = etree.fromstring(response_data)[0]
+
+                # Return as a dictionary
                 return dict(zip(['user_id', 'username', 'watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch',
-                                 'days_spent_watching'], [x.text for x in data]))
-
-
-if __name__ == '__main__':
-    rip = PyAnimeList()
-    loop = asyncio.get_event_loop()
-    print(loop.run_until_complete(rip.get_public_user_data('GetRektByMe')))
-    print(loop.run_until_complete(rip.get_user_series('GetRektByMe', 'manga')))
+                                 'days_spent_watching'], [x.text for x in to_parse]))

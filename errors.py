@@ -1,5 +1,5 @@
 class NoContentException(Exception):
     pass
 
-class InvalidInputException(Exception):
+class NotAddedException(Exception):
     pass
