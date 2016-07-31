@@ -1,11 +1,20 @@
 # PyAnimeList
-A Python 3 async wrapper for the MyAnimeList API
+An async Python 3 wrapper for the MyAnimeList API
 
 #Requirements
 * Python 3.5
-* lxml
-* dicttoxml
 * aiohttp
+* bs4
+* dicttoxml
+* lxml
+
+***You may fall into trouble trying to download this as PyAnimeList, in which case, go download a c++ compiler and it should fix any issues you run into***
+
+
+# Installing PyAnimeList
+ ```
+ pip install pyanimelist
+ ```
 
 #Creating the PyAnimeList Object
 If not passing the username and password directly into the PyAnimeList object on creation, 
