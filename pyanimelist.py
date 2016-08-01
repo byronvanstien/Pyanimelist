@@ -23,6 +23,10 @@ class PyAnimeList:
     __MAL_APP_INFO = 'http://myanimelist.net/malappinfo.php'
     # Version of PyAnimeList
     __version__ = 1.0
+    # Author
+    __author__ = 'Recchan'
+    # License
+    __license__ = 'MIT'
 
     def __init__(self, username=setup['username'], password=setup['password'],
                  user_agent=None):
@@ -129,24 +133,8 @@ class PyAnimeList:
         :param fansub_group: What fansub group subbed your anime                            String
         :param tags: Any tags that relate to the anime                                      String, with each tab seperated by a comma
         """
-        anime_values = {
-            'episode': kwargs.get('episodes'),
-            'status': status,
-            'score': kwargs.get('score'),
-            'storage_type': kwargs.get('storage_type'),
-            'storage_value': kwargs.get('storage_value'),
-            'times_rewatched': kwargs.get('times_rewatched'),
-            'rewatch_value': kwargs.get('rewatch_value'),
-            'date_start': kwargs.get('date_started'),
-            'date_finish': kwargs.get('date_finished'),
-            'priority': kwargs.get('priority'),
-            'enable_discussion': kwargs.get('enable_discussion'),
-            'enable_rewatching': kwargs.get('enable_rewatching'),
-            'comments': kwargs.get('comments'),
-            'fansub_group': kwargs.get('fansub_group'),
-            'tags': kwargs.get('tags')
-        }
-        xml = dicttoxml(anime_values, attr_type=False, custom_root='entry')
+        kwargs.update(status=status)
+        xml = dicttoxml(kwargs, attr_type=False, custom_root='entry')
         params = urllib.parse.urlencode({'data': xml})
         async with self.session.get(self.__API_BASE_URL + 'animelist/add/' + (str(anime_id)) + '.xml',
                                     params=params) as response:
@@ -179,24 +167,8 @@ class PyAnimeList:
         :param tags: Tags related to the novel, seperated by comma
         :param retail_volumes: How many volumes you own
         """
-        manga_values = {
-            'status': status,
-            'chapter': kwargs.get('chapter'),
-            'volumes': kwargs.get('volumes'),
-            'score': kwargs.get('score'),
-            'times_reread': kwargs.get('times_reread'),
-            'reread_value': kwargs.get('reread_value'),
-            'date_start': kwargs.get('date_start'),
-            'date_finish': kwargs.get('date_finish'),
-            'priority': kwargs.get('priority'),
-            'enable_discussion': kwargs.get('enable_discussion'),
-            'enable_rereading': kwargs.get('enable_rereading'),
-            'comments': kwargs.get('comments'),
-            'scan_group': kwargs.get('scan_group'),
-            'tags': kwargs.get('tags'),
-            'retail_volumes': kwargs.get('retail_volumes')
-        }
-        xml_manga_values = dicttoxml(manga_values, attr_type=False, custom_root='entry')
+        kwargs.update(status=status)
+        xml_manga_values = dicttoxml(kwargs, attr_type=False, custom_root='entry')
         params = urllib.parse.urlencode({'data': xml_manga_values})
         async with self.session.get(self.__API_BASE_URL + 'mangalist/add/' + str(manga_id) + '.xml',
                                     params=params) as response:
@@ -225,24 +197,8 @@ class PyAnimeList:
         :param tags: Any tags that relate to the anime                                      String, with each tab seperated by a comma
         """
         # Anime values in dict for dicttoxml
-        anime_values = {
-            'episode': kwargs.get('episodes'),
-            'status': status,
-            'score': kwargs.get('score'),
-            'storage_type': kwargs.get('storage_type'),
-            'storage_value': kwargs.get('storage_value'),
-            'times_rewatched': kwargs.get('times_rewatched'),
-            'rewatch_value': kwargs.get('rewatch_value'),
-            'date_start': kwargs.get('date_started'),
-            'date_finish': kwargs.get('date_finished'),
-            'priority': kwargs.get('priority'),
-            'enable_discussion': kwargs.get('enable_discussion'),
-            'enable_rewatching': kwargs.get('enable_rewatching'),
-            'comments': kwargs.get('comments'),
-            'fansub_group': kwargs.get('fansub_group'),
-            'tags': kwargs.get('tags')
-        }
-        xml = dicttoxml(anime_values, attr_type=False, custom_root='entry')
+        kwargs.update(status=status)
+        xml = dicttoxml(kwargs, attr_type=False, custom_root='entry')
         params = urllib.parse.urlencode({'data': xml})
         async with self.session.get(self.__API_BASE_URL + 'animelist/update/' + (str(anime_id)) + '.xml',
                                     params=params) as response:
@@ -272,25 +228,8 @@ class PyAnimeList:
         :param tags: Tags related to the novel, seperated by comma
         :param retail_volumes: How many volumes you own
         """
-        # Store manga values to a dictionary for dicttoxml
-        manga_values = {
-            'status': status,
-            'chapter': kwargs.get('chapter'),
-            'volumes': kwargs.get('volumes'),
-            'score': kwargs.get('score'),
-            'times_reread': kwargs.get('times_reread'),
-            'reread_value': kwargs.get('reread_value'),
-            'date_start': kwargs.get('date_start'),
-            'date_finish': kwargs.get('date_finish'),
-            'priority': kwargs.get('priority'),
-            'enable_discussion': kwargs.get('enable_discussion'),
-            'enable_rereading': kwargs.get('enable_rereading'),
-            'comments': kwargs.get('comments'),
-            'scan_group': kwargs.get('scan_group'),
-            'tags': kwargs.get('tags'),
-            'retail_volumes': kwargs.get('retail_volumes')
-        }
-        xml_manga_values = dicttoxml(manga_values, attr_type=False, custom_root='entry')
+        kwargs.update(status=status)
+        xml_manga_values = dicttoxml(kwargs, attr_type=False, custom_root='entry')
         params = urllib.parse.urlencode({'data': xml_manga_values})
         async with self.session.get(self.__API_BASE_URL + 'mangalist/update/' + str(manga_id) + '.xml',
                                     params=params) as response:
@@ -339,18 +278,14 @@ class PyAnimeList:
             'type': series_type
         })
         # If series_type == anime
-        if series_type == 'anime':
+        if series_type not in ['anime', 'manga']:
+            pass
+        else:
             async with self.session.get(
                     self.__MAL_APP_INFO, params=params) as response:
                 soup = bs4.BeautifulSoup(await response.text(), "lxml")
             # Return as a dictionary
-                return [dict(self.process_(child) for child in anime.children) for anime in soup.find_all('anime')]
-        # If series_type == manga
-        elif series_type == 'manga':
-            async with self.session.get(self.__MAL_APP_INFO, params=params) as response:
-                soup = bs4.BeautifulSoup(await response.text(), "lxml")
-                # Return as a dictionary
-                return [dict(self.process_(child) for child in manga.children) for manga in soup.find_all('manga')]
+                return [dict(self.process_(child) for child in anime.children) for anime in soup.find_all(series_type)]
     # End of bit Zeta wrote
 
     async def get_public_user_data(self, username: str):
