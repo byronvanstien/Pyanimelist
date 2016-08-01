@@ -8,7 +8,7 @@ An async Python 3 wrapper for the MyAnimeList API
 * dicttoxml
 * lxml
 
-***You may fall into trouble trying to download this as PyAnimeList, in which case, go download a c++ compiler and it should fix any issues you run into***
+***You may fall into trouble trying to download this, in which case, go download a c++ compiler and it should fix any issues you run into***
 
 
 # Installing PyAnimeList
