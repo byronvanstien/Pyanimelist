@@ -3,3 +3,7 @@ class NoContentException(Exception):
 
 class NotAddedException(Exception):
     pass
+
+
+class InvalidSeriesTypeException(Exception):
+    pass

@@ -6,7 +6,7 @@ from datetime import datetime
 import aiohttp
 import bs4
 from dicttoxml import dicttoxml
-from errors import NoContentException, NotAddedException
+from errors import NoContentException, NotAddedException, InvalidSeriesTypeException
 from lxml import etree
 
 try:
@@ -279,7 +279,7 @@ class PyAnimeList:
         })
         # If series_type == anime
         if series_type not in ['anime', 'manga']:
-            pass
+            raise InvalidSeriesTypeException
         else:
             async with self.session.get(
                     self.__MAL_APP_INFO, params=params) as response:
