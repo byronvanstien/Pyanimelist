@@ -22,7 +22,7 @@ class PyAnimeList:
     # Information for individual users
     __MAL_APP_INFO = 'http://myanimelist.net/malappinfo.php'
     # Version of PyAnimeList
-    __version__ = 1.0
+    __version__ = 1.1
     # Author
     __author__ = 'Recchan'
     # License
