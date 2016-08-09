@@ -26,12 +26,11 @@ class PyAnimeList:
         through the keyword argument
         """
         # Set default User-Agent
-        if user_agent is None:
-            self.user_agent = {'User-Agent': 'PyAnimeList'}
+        self.user_agent = user_agent or {'User-Agent': 'PyAnimeList'}
         self._username = username
-        self.__password = password
-        self.__auth = aiohttp.BasicAuth(login=self._username, password=self.__password)
-        self.session = aiohttp.ClientSession(auth=self.__auth, headers=self.user_agent)
+        self._password = password
+        self._auth = aiohttp.BasicAuth(login=self._username, password=self._password)
+        self.session = aiohttp.ClientSession(auth=self._auth, headers=self.user_agent)
 
     # Get rid of unclosed client session error
     def __del__(self):
