@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='PyAnimeList',
-    version='1.1',
-    packages=[],
+    version='1.2',
+    packages=['PyAnimeList'],
     url='https://github.com/GetRektByMe/PyAnimeList',
     license='MIT',
     author='Recchan',
@@ -18,6 +18,6 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
         'Topic :: Software Development :: Libraries'
     ],
-    keywords="NovelUpdates asyncio aiohttp scraping",
+    keywords="aiohttp asyncio myanimelist xml parsing",
     install_requires=['aiohttp', 'bs4', 'lxml', 'dicttoxml'],
 )

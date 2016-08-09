@@ -6,8 +6,10 @@ from datetime import datetime
 import aiohttp
 import bs4
 from dicttoxml import dicttoxml
-from errors import NoContentException, NotAddedException, InvalidSeriesTypeException
 from lxml import etree
+
+# Module level imports
+from .errors import NoContentException, InvalidSeriesTypeException
 
 
 class PyAnimeList:
@@ -15,12 +17,6 @@ class PyAnimeList:
     __API_BASE_URL = 'http://myanimelist.net/api/'
     # Information for individual users
     __MAL_APP_INFO = 'http://myanimelist.net/malappinfo.php'
-    # Version of PyAnimeList
-    __version__ = 1.1
-    # Author
-    __author__ = 'Recchan'
-    # License
-    __license__ = 'MIT'
 
     def __init__(self, username, password, user_agent=None):
         """
@@ -31,7 +27,7 @@ class PyAnimeList:
         """
         # Set default User-Agent
         if user_agent is None:
-            self.user_agent = {'User-Agent': 'PyAnimeList/' + str(self.__version__)}
+            self.user_agent = {'User-Agent': 'PyAnimeList'}
         self._username = username
         self.__password = password
         self.__auth = aiohttp.BasicAuth(login=self._username, password=self.__password)
@@ -76,6 +72,8 @@ class PyAnimeList:
                         'image': entry.find('image').text
                     })
                 return animes
+            else:
+                raise aiohttp.ClientResponseError(response.status)
 
     async def search_all_manga(self, search_query: str):
         """:param search_query: is what'll be queried for the search results"""
@@ -102,6 +100,8 @@ class PyAnimeList:
                         'image': manga_entry.find('image').text,
                     })
                 return manga
+            else:
+                raise aiohttp.ClientError(response.status)
 
     async def get_first_anime_result(self, search_query: str):
         """ :param search_query: is what'll be queried for results """
@@ -138,7 +138,7 @@ class PyAnimeList:
         async with self.session.get(self.__API_BASE_URL + 'manga/search.xml', params=params) as response:
             if response.status == 200:
                 response_data = await response.read()
-                # Gets first anime
+                # Gets first manga
                 manga_entry = etree.fromstring(response_data)[0]
                 # Manga Values to return
                 return_data = {
@@ -241,7 +241,9 @@ class PyAnimeList:
         """
         # Adds status to kwargs
         kwargs.update(status=status)
+        # Changes to valid xml data
         xml = dicttoxml(kwargs, attr_type=False, custom_root='entry')
+        # Parameters for the URL
         params = urllib.parse.urlencode({'data': xml})
         async with self.session.get(self.__API_BASE_URL + 'animelist/update/' + (str(anime_id)) + '.xml',
                                     params=params) as response:
@@ -339,10 +341,12 @@ class PyAnimeList:
 
     async def get_public_user_data(self, username: str):
         async with self.session.get(self.__MAL_APP_INFO, params=urllib.parse.urlencode({'u': username})) as response:
-            # If the response is 200 OK
             if response.status == 200:
                 response_data = await response.read()
+                # Since public user data is the first result that myanimelist ever gives
                 to_parse = etree.fromstring(response_data)[0]
                 # Return as a dictionary
                 return dict(zip(['user_id', 'username', 'watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch',
                                  'days_spent_watching'], [x.text for x in to_parse]))
+            else:
+                raise aiohttp.ClientResponseError(response.status)
