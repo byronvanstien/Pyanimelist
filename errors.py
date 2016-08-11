@@ -7,3 +7,7 @@ class NotAddedException(Exception):
 
 class InvalidSeriesTypeException(Exception):
     pass
+
+
+class ServerErrorException(Exception):
+    pass
