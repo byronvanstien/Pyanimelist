@@ -25,18 +25,23 @@ class PyAnimeList:
     # Information for individual users
     __MAL_APP_INFO = 'http://myanimelist.net/malappinfo.php'
 
-    def __init__(self, username, password, user_agent=None):
+    def __init__(self, **kwargs):
         """
         :param username: the account that is being used to access the API
         :param password: the password of the account that is being used to access the API
         :param user_agent: useragent of the application, defaults to PyAnimeList unless explicitly passed through the keyword argument
+        :param session: a way for the user to pass in their own aiohttp.ClientSession (Do not pass in username and password through
+        PyAnimeList if doing this, pass it in through your own ClientSession's auth)
         """
+        # Username and password to be passed to auth
+        self._username = kwargs.get("username")
+        self._password = kwargs.get("password")
         # Set default User-Agent
-        self.user_agent = user_agent or {'User-Agent': 'PyAnimeList'}
-        self._username = username
-        self._password = password
+        self.user_agent = kwargs.get("user_agent") or {'User-Agent': 'PyAnimeList'}
+        # The basic auth that's needed to allow us to access the API
         self._auth = aiohttp.BasicAuth(login=self._username, password=self._password)
-        self.session = aiohttp.ClientSession(auth=self._auth, headers=self.user_agent)
+        # Set a default session if the user doesn't pass one in
+        self.session = kwargs.get("session") or aiohttp.ClientSession(auth=self._auth, headers=self.user_agent)
 
     # Get rid of unclosed client session error
     def __del__(self):
