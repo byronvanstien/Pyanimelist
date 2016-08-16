@@ -34,7 +34,8 @@ class PyAnimeList:
         # Set default User-Agent
         self.user_agent = kwargs.get("user_agent") or {'User-Agent': 'PyAnimeList'}
         # The basic auth that's needed to allow us to access the API
-        self._auth = aiohttp.BasicAuth(login=self._username, password=self._password)
+        if self._username is not None and self._password is not None:
+            self._auth = aiohttp.BasicAuth(login=self._username, password=self._password)
         # Set a default session if the user doesn't pass one in
         self.session = kwargs.get("session") or aiohttp.ClientSession(auth=self._auth, headers=self.user_agent)
 

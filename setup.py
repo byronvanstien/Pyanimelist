@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='PyAnimeList',
-    version='1.2.1',
+    version='1.2.2',
     packages=['PyAnimeList'],
     url='https://github.com/GetRektByMe/PyAnimeList',
     license='MIT',
