@@ -1,8 +1,8 @@
 """
-A wrapper for the myanimelist API
+A wrapper for the MyAnimeList API
 """
 
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 __author__ = 'Recchan'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2015-2016 Byron'

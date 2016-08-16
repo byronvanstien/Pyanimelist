@@ -13,12 +13,7 @@ from .errors import NoContentException, InvalidSeriesTypeException, ServerErrorE
 
 class PyAnimeList:
     """
-    Response codes we account for:
-    200 = OK
-    201 = Created
-    204 = No Content Found
-    404 = Page not found
-    500 = Server error
+    An API wrapper for the MyAnimeList API
     """
     # The base url for the API
     __API_BASE_URL = 'http://myanimelist.net/api/'
@@ -305,6 +300,7 @@ class PyAnimeList:
                 raise aiohttp.ClientResponseError(response.status)
 
     async def delete_anime(self, anime_id: int):
+        """:param anime_id: the id of the anime on myanimelist"""
         async with self.session.get(self.__API_BASE_URL + 'animelist/delete/' + str(anime_id) + '.xml') as response:
             if response.status == 200:
                 return True
@@ -314,6 +310,7 @@ class PyAnimeList:
                 raise aiohttp.ClientResponseError(response.status)
 
     async def delete_manga(self, manga_id: int):
+        """:param manga_id: the id of the manga on myanimelist"""
         async with self.session.get(self.__API_BASE_URL + 'mangalist/delete/' + str(manga_id) + '.xml') as response:
             if response.status == 200:
                 return True
@@ -344,7 +341,7 @@ class PyAnimeList:
         :param profile: The name of the profile you're trying to get
         :param series_type: If you're looking for their manga or anime
         """
-        # Params for the url kept here due to it being longer than others
+        # Params for the url kept here due to having quite a few params
         params = {
             'u': profile,
             'status': 'all',
@@ -366,6 +363,7 @@ class PyAnimeList:
     # End of bit Zeta wrote
 
     async def get_public_user_data(self, username: str):
+        """The username of the user who's data we're getting"""
         async with self.session.get(self.__MAL_APP_INFO, params={'u': username}) as response:
             if response.status == 200:
                 response_data = await response.read()
