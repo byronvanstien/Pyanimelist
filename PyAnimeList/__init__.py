@@ -2,7 +2,7 @@
 A wrapper for the MyAnimeList API
 """
 
-__version__ = "1.2.2"
+__version__ = "1.0.0"
 __author__ = 'Recchan'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2015-2016 Byron'
