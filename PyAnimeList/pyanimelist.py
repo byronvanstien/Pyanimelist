@@ -77,21 +77,20 @@ class PyAnimeList:
                 entries = etree.fromstring(response_data)
                 animes = []
                 for entry in entries:
-                    synopsis = html.unescape(entry.find("synopsis"))
-                    # Account for things if they're None
-                    if synopsis is not None:
-                        synopsis = synopsis.text
-                    animes.append(Anime(id=entry.find("id").text,
-                                        title=entry.find("title").text,
-                                        english=entry.find("english").text,
-                                        synonyms=entry.find("synonyms").text,
-                                        episodes=entry.find("episodes").text,
-                                        type=entry.find("type").text,
-                                        status=entry.find("status").text,
-                                        start_date=entry.find("start_date").text,
-                                        end_date=entry.find("end_date").text,
-                                        synopsis=synopsis,
-                                        image=entry.find("image").text))
+                    try:
+                        animes.append(Anime(id=entry.find("id").text,
+                                            title=entry.find("title").text,
+                                            english=entry.find("english").text,
+                                            synonyms=entry.find("synonyms").text,
+                                            episodes=entry.find("episodes").text,
+                                            type=entry.find("type").text,
+                                            status=entry.find("status").text,
+                                            start_date=entry.find("start_date").text,
+                                            end_date=entry.find("end_date").text,
+                                            synopsis=html.unescape(entry.find('synopsis').text.replace('<br />', '')),
+                                            image=entry.find("image").text))
+                    except AttributeError:  # Except AttributeError so when things are None it doesn't break
+                        pass
                 # Return as a list containing anime objects with data from the anime returned from the query
                 return animes
             else:
@@ -113,22 +112,21 @@ class PyAnimeList:
                 entries = etree.fromstring(response_data)
                 mangas = []
                 for manga_entry in entries:
-                    synopsis = html.unescape(manga_entry.find("synopsis"))
-                    # Account for things if they're None
-                    if synopsis is not None:
-                        synopsis = synopsis.text
-                    mangas.append(Manga(id=manga_entry.find("id").text,
-                                        title=manga_entry.find("title").text,
-                                        english=manga_entry.find("english").text,
-                                        synonyms=manga_entry.find("synonyms").text,
-                                        volumes=manga_entry.find("volumes").text,
-                                        chapters=manga_entry.find("chapters").text,
-                                        type=manga_entry.find("type").text,
-                                        status=manga_entry.find("status").text,
-                                        start_date=manga_entry.find("start_date").text,
-                                        end_date=manga_entry.find("end_date").text,
-                                        synopsis=synopsis,
-                                        image=manga_entry.find("image").text))
+                    try:
+                        mangas.append(Manga(id=manga_entry.find("id").text,
+                                            title=manga_entry.find("title").text,
+                                            english=manga_entry.find("english").text,
+                                            synonyms=manga_entry.find("synonyms").text,
+                                            volumes=manga_entry.find("volumes").text,
+                                            chapters=manga_entry.find("chapters").text,
+                                            type=manga_entry.find("type").text,
+                                            status=manga_entry.find("status").text,
+                                            start_date=manga_entry.find("start_date").text,
+                                            end_date=manga_entry.find("end_date").text,
+                                            synopsis=html.unescape(manga_entry.find('synopsis').text.replace('<br />', '')),
+                                            image=manga_entry.find("image").text))
+                    except AttributeError:  # Except AttributeError so when things are None it doesn't break
+                        pass
                 # Return as a list containing manga objects with data from the mangas returned from the query
                 return mangas
             else:
