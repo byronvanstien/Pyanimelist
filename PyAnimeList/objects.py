@@ -58,3 +58,11 @@ class UserInfo:
         self.dropped = kwargs.get("dropped")
         self.plan_to_watch = kwargs.get("plan_to_watch")
         self.days_spent_watching = kwargs.get("days_spent_watching")
+
+
+class SuperUser:
+
+    def __init__(self, **kwargs):
+        self.anime = kwargs.get("anime")
+        self.manga = kwargs.get("manga")
+        self.info = kwargs.get("info")

@@ -9,4 +9,4 @@ __copyright__ = 'Copyright 2015-2016 Byron'
 __title__ = 'PyAnimeList'
 
 from .errors import InvalidSeriesTypeException
-from .pyanimelist import PyAnimeList
+from .client import PyAnimeList

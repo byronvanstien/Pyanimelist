@@ -19,5 +19,5 @@ An async Python 3 wrapper for the MyAnimeList API
 #Creating the PyAnimeList Object
 It's as simple as
 ```
-p = PyAnimeList()
+p = PyAnimeList(username="", password="")
 ```
