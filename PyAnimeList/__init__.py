@@ -1,12 +1,10 @@
-"""
-A wrapper for the MyAnimeList API
-"""
-
-__version__ = "1.1.0"
-__author__ = 'Recchan'
+__version__ = "1.2.0"
+__author__ = 'Byron Vanstien'
 __license__ = 'MIT'
-__copyright__ = 'Copyright 2015-2016 Byron'
-__title__ = 'PyAnimeList'
+__copyright__ = 'Copyright 2015-2016 Byron Vanstien'
+__title__ = 'pyanimelist'
 
-from .errors import InvalidSeriesTypeException
-from .client import PyAnimeList
+from .errors import *
+from .client import *
+from .objects import *
+from .constants import *

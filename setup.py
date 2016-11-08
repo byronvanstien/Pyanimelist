@@ -1,15 +1,18 @@
 from setuptools import setup, find_packages
 
+from pyanimelist.constants import LIBRARY_URL
+from pyanimelist import __license__ as license, __author__ as author, __title__ as title, __version__ as version
+
 setup(
-    name='PyAnimeList',
-    version='1.1.0',
+    name=title,
+    version=version,
     packages=find_packages(),
-    url='https://github.com/GetRektByMe/PyAnimeList',
-    license='MIT',
-    author='Recchan',
+    url=LIBRARY_URL,
+    license=license,
+    author=author,
     author_email='',
     description='Python 3 bindings for the MyAnimeList API.',
-    long_description='An async wrapper for the MyAnimeList api.',
+    long_description='An asynchronous wrapper for the MyAnimeList api.',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

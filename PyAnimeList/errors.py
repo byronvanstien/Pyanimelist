@@ -17,3 +17,10 @@ class ResponseError(PyAnimeListException):
     Only raised when response.status isn't 200
     """
     pass
+
+
+class InvalidCredentials(PyAnimeListException):
+    """
+    Raised when invalid login details are passed to verify_credentials
+    """
+    pass
