@@ -1,10 +1,12 @@
 from datetime import datetime
+from typing import List, Tuple, Dict
 
 import bs4
 import aiohttp
 from lxml import etree
 from dicttoxml import dicttoxml
 
+from .abstractions import Titles, Dates
 from .objects import Anime, Manga, UserInfo
 from .errors import InvalidSeriesTypeException, ResponseError, InvalidCredentials
 from .constants import (
@@ -36,7 +38,7 @@ class PyAnimeList(object):
         self.user_agent = user_agent or UA
         self._auth = aiohttp.BasicAuth(login=username, password=password)
 
-    async def verify_credentials(self):
+    async def verify_credentials(self) -> Tuple[str, str]:
         """
         This function is used for verifying if a users information is correct, it uses the username and password passed into self._auth)
         :return type tuple:
@@ -44,13 +46,12 @@ class PyAnimeList(object):
         with aiohttp.ClientSession(auth=self._auth, headers={"User-Agent": self.user_agent}) as session:
             async with session.get(VERIFY_CREDENTIALS) as response:
                 if response.status != 200:
-                    raise InvalidCredentials()
+                    raise InvalidCredentials
                 response_data = await response.read()
                 user = etree.fromstring(response_data)
-                # Returns the username and id in tuple
                 return user.find("id").text, user.find("username").text
 
-    async def search_all_anime(self, search_query: str):
+    async def search_all_anime(self, search_query: str) -> List[Anime]:
         """
         A function to get data for all search results from a query
         :param search_query: is what'll be queried for the search results
@@ -69,23 +70,27 @@ class PyAnimeList(object):
                         animes.append(
                             Anime(
                                 id=entry.find("id").text,
-                                title=entry.find("title").text,
-                                english=entry.find("english").text,
-                                synonyms=entry.find("synonyms").text,
-                                episodes=entry.find("episodes").text,
+                                titles=Titles(
+                                    jp=entry.find("title").text,
+                                    english=entry.find("english").text,
+                                    synonyms=entry.find("synonyms").text.split(";")
+                                ),
+                                episode_count=entry.find("episodes").text,
+                                dates=Dates(
+                                    start=entry.find("start_date").text,
+                                    end=entry.find("end_date").text
+                                ),
                                 type=entry.find("type").text,
                                 status=entry.find("status").text,
-                                start_date=entry.find("start_date").text,
-                                end_date=entry.find("end_date").text,
                                 synopsis=entry.find("synopsis").text.replace("<br />", ""),
-                                image=entry.find("image").text
-                                )
+                                cover=entry.find("image").text
                             )
+                        )
                     except AttributeError:
                         continue
                 return animes
 
-    async def search_all_manga(self, search_query: str):
+    async def search_all_manga(self, search_query: str) -> List[Manga]:
         """
         A function to get data for all search results from a query
         :param search_query: is what'll be queried for the search results
@@ -99,29 +104,33 @@ class PyAnimeList(object):
                 response_data = await response.read()
                 entries = etree.fromstring(response_data)
                 mangas = []
-                for manga_entry in entries:
+                for entry in entries:
                     try:
                         mangas.append(
                             Manga(
-                                id=manga_entry.find("id").text,
-                                title=manga_entry.find("title").text,
-                                english=manga_entry.find("english").text,
-                                synonyms=manga_entry.find("synonyms").text,
-                                volumes=manga_entry.find("volumes").text,
-                                chapters=manga_entry.find("chapters").text,
-                                type=manga_entry.find("type").text,
-                                status=manga_entry.find("status").text,
-                                start_date=manga_entry.find("start_date").text,
-                                end_date=manga_entry.find("end_date").text,
-                                synopsis=manga_entry.find("synopsis").text.replace("<br />", ""),
-                                image=manga_entry.find("image").text
-                                )
+                                id=entry.find("id").text,
+                                titles=Titles(
+                                    jp=entry.find("title").text,
+                                    english=entry.find("english").text,
+                                    synonyms=entry.find("synonyms").text.split(";")
+                                ),
+                                volumes=entry.find("volumes").text,
+                                chapters=entry.find("chapters").text,
+                                type=entry.find("type").text,
+                                status=entry.find("status").text,
+                                dates=Dates(
+                                    start=entry.find("start_date").text,
+                                    end_date=entry.find("end_date").text
+                                ),
+                                synopsis=entry.find("synopsis").text.replace("<br />", ""),
+                                cover=entry.find("image").text
                             )
+                        )
                     except AttributeError:
                         continue
                 return mangas
 
-    async def add_anime(self, anime_id: int, status: int, **kwargs):
+    async def add_anime(self, anime_id: int, status: int, **kwargs) -> bool:
         """
         :param anime_id: id is the id of the anime that we'll be adding to the list
         :param status: If the user is watching an anime, if the anime is on hold ect
@@ -156,7 +165,7 @@ class PyAnimeList(object):
                 # Return True to show adding the item worked
                 return True
 
-    async def add_manga(self, manga_id: int, status: int, **kwargs):
+    async def add_manga(self, manga_id: int, status: int, **kwargs) -> bool:
         """
         :param manga_id: The id on MAL of the manga
         :param status: What you're currently doing with the manga, watching ect
@@ -187,7 +196,7 @@ class PyAnimeList(object):
                 # Return True to show adding the item worked
                 return True
 
-    async def update_anime(self, anime_id: int, **kwargs):
+    async def update_anime(self, anime_id: int, **kwargs) -> bool:
         """
         :param anime_id: id is the id of the anime that we'll be adding to the list
         :param episode: Latest episode in the series the user has watched
@@ -222,7 +231,7 @@ class PyAnimeList(object):
                 # Return true to show the item has been updated fine
                 return True
 
-    async def update_manga(self, manga_id: int, **kwargs):
+    async def update_manga(self, manga_id: int, **kwargs) -> bool:
         """
         :param manga_id:
         :param status: What you're currently doing with the manga, watching ect
@@ -252,7 +261,7 @@ class PyAnimeList(object):
                 # Return True to show the item has been updated
                 return True
 
-    async def delete_anime(self, anime_id: int):
+    async def delete_anime(self, anime_id: int) -> bool:
         """
         :param anime_id: the id of the anime on myanimelist
         :return type boolean:
@@ -265,7 +274,7 @@ class PyAnimeList(object):
                 # Return True to indicate that deleting the item worked
                 return True
 
-    async def delete_manga(self, manga_id: int):
+    async def delete_manga(self, manga_id: int) -> bool:
         """
         :param manga_id: the id of the manga on myanimelist
         :return type boolean:
@@ -280,12 +289,12 @@ class PyAnimeList(object):
 
     # Zeta wrote this bit
     @staticmethod
-    def process_(child):
+    def process_(child) -> Tuple[str, datetime]:
         name, text = child.name, child.get_text()
         try:
             # Try converting text to an integer
             text = int(text)
-        # Ignore if we get a bad value
+        # Ignore if we get a value we can't cast to int
         except ValueError:
             pass
         if name == "my_last_updated":
@@ -298,7 +307,7 @@ class PyAnimeList(object):
         # Return name and text in tuple
         return name, text
 
-    async def get_user_series(self, username: str, series_type: str):
+    async def get_user_series(self, username: str, series_type: str) -> List[Dict[str]]:
         """
         :param username: The name of the accounts information you're trying to get
         :param series_type: If you're looking for manga or anime
@@ -310,7 +319,7 @@ class PyAnimeList(object):
             "type": series_type
         }
         if series_type not in ("anime", "manga"):
-            raise InvalidSeriesTypeException()
+            raise InvalidSeriesTypeException
         else:
             with aiohttp.ClientSession(auth=self._auth, headers={"User-Agent": self.user_agent}) as session:
                 async with session.get(MAL_APP_INFO, params=params) as response:
@@ -322,7 +331,7 @@ class PyAnimeList(object):
                     return [dict(self.process_(child) for child in anime.children) for anime in soup.find_all(series_type)]
     # End of bit Zeta wrote
 
-    async def get_user_data(self, user: str):
+    async def get_user_data(self, user: str) -> UserInfo:
         """
         :param user: username who's information we're getting
         :return type list:
@@ -338,7 +347,7 @@ class PyAnimeList(object):
                 user_info = etree.fromstring(response_data)[0]
                 # Add to list containing UserInfo objects
                 return UserInfo(
-                    user_id=user_info.find("user_id").text,
+                    id=user_info.find("user_id").text,
                     username=user_info.find("user_name").text,
                     watching=user_info.find("user_watching").text,
                     completed=user_info.find("user_completed").text,
@@ -346,4 +355,4 @@ class PyAnimeList(object):
                     dropped=user_info.find("user_dropped").text,
                     plan_to_watch=user_info.find("user_plantowatch").text,
                     days_spent_watching=user_info.find("user_days_spent_watching").text
-                    )
+                )
