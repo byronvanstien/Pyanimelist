@@ -307,7 +307,7 @@ class PyAnimeList(object):
         # Return name and text in tuple
         return name, text
 
-    async def get_user_series(self, username: str, series_type: str) -> List[Dict[str]]:
+    async def get_user_series(self, username: str, series_type: str):
         """
         :param username: The name of the accounts information you're trying to get
         :param series_type: If you're looking for manga or anime
