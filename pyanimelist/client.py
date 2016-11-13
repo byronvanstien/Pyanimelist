@@ -1,5 +1,6 @@
+import html
 from datetime import datetime
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 
 import bs4
 import aiohttp
@@ -38,7 +39,7 @@ class PyAnimeList(object):
         self.user_agent = user_agent or UA
         self._auth = aiohttp.BasicAuth(login=username, password=password)
 
-    async def verify_credentials(self) -> Tuple[str, str]:
+    async def verify_credentials(self) -> Tuple[str]:
         """
         This function is used for verifying if a users information is correct, it uses the username and password passed into self._auth)
         :return type tuple:
@@ -82,7 +83,7 @@ class PyAnimeList(object):
                                 ),
                                 type=entry.find("type").text,
                                 status=entry.find("status").text,
-                                synopsis=entry.find("synopsis").text.replace("<br />", ""),
+                                synopsis=html.unescape(entry.find("synopsis").text.replace("<br />", "").replace("[i]", "").replace("[/i]", "")),
                                 cover=entry.find("image").text
                             )
                         )
@@ -122,7 +123,7 @@ class PyAnimeList(object):
                                     start=entry.find("start_date").text,
                                     end=entry.find("end_date").text
                                 ),
-                                synopsis=entry.find("synopsis").text.replace("<br />", ""),
+                                synopsis=html.unescape(entry.find("synopsis").text.replace("<br />", "").replace("[i]", "").replace("[/i]", "")),
                                 cover=entry.find("image").text
                             )
                         )
