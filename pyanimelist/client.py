@@ -120,7 +120,7 @@ class PyAnimeList(object):
                                 status=entry.find("status").text,
                                 dates=Dates(
                                     start=entry.find("start_date").text,
-                                    end_date=entry.find("end_date").text
+                                    end=entry.find("end_date").text
                                 ),
                                 synopsis=entry.find("synopsis").text.replace("<br />", ""),
                                 cover=entry.find("image").text
