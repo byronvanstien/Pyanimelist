@@ -1,4 +1,7 @@
-from . import __version__ as LIBRARY_VERSION, __title__ as LIBRARY_NAME
+from . import (
+    __title__ as LIBRARY_NAME,
+    __version__ as LIBRARY_VERSION
+)
 
 LIBRARY_URL = "https://github.com/GetRektByMe/Pyanimelist"
 

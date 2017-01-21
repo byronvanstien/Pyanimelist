@@ -1,4 +1,4 @@
-class Anime:
+class Anime(object):
 
     """
     Represents a myanimelist anime
@@ -15,7 +15,7 @@ class Anime:
         self.cover = kwargs.get("cover")
 
 
-class Manga:
+class Manga(object):
 
     """
     Represents a myanimelist manga
@@ -33,7 +33,7 @@ class Manga:
         self.cover = kwargs.get("cover")
 
 
-class UserAnime:
+class UserAnime(object):
 
     def __init__(self, **kwargs):
         self.title = kwargs.get("title")
@@ -43,13 +43,13 @@ class UserAnime:
         # Remember that there's more to do here
 
 
-class UserManga:
+class UserManga(object):
 
     def __init__(self, **kwargs):
         pass
 
 
-class UserInfo:
+class UserInfo(object):
 
     """
     Represents a users myinfo from the malappinfo endpoint
