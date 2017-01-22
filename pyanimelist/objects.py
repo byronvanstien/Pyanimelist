@@ -1,7 +1,7 @@
 class Anime(object):
 
     """
-    Represents a myanimelist anime
+    Represents a `myanimelist`_ anime
     """
 
     def __init__(self, **kwargs):
@@ -18,7 +18,7 @@ class Anime(object):
 class Manga(object):
 
     """
-    Represents a myanimelist manga
+    Represents a `myanimelist`_ manga
     """
 
     def __init__(self, **kwargs):
