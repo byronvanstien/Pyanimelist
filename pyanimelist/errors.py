@@ -1,3 +1,6 @@
+import warnings
+
+
 class PyAnimeListException(Exception):
     """
     Base exception class for pyanimelist exceptions
@@ -7,20 +10,29 @@ class PyAnimeListException(Exception):
 
 class InvalidSeriesTypeException(PyAnimeListException):
     """
-    If you input an invalid series type
+    Raised if you pass an invalid series type
     """
     pass
 
 
 class ResponseError(PyAnimeListException):
     """
-    Only raised when response.status isn't 200
+    Raised when response.status isn't 200 (OK)
     """
     pass
 
 
-class InvalidCredentials(PyAnimeListException):
+class InvalidCredentials(ResponseError):
     """
     Raised when invalid login details are passed to verify_credentials
+
+    Inherits from :class:`pyanimelist.errors.ResponseError`
+    """
+    pass
+
+
+class ScraperDisabled(PyAnimeListException, warnings.Warning):
+    """
+    Raised when user tries using a method on :class:`pyanimelist.Client.scraper`
     """
     pass

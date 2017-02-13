@@ -7,6 +7,7 @@ import aiohttp
 from lxml import etree
 from dicttoxml import dicttoxml
 
+from util.web import fetch_url
 from .abstractions import Titles, Dates
 from .objects import Anime, Manga, UserInfo
 from .errors import InvalidSeriesTypeException, ResponseError, InvalidCredentials
@@ -24,22 +25,24 @@ from .constants import (
     ANIME_DELETE_URL
 )
 
+__all__ = ["PyAnimeList"]  # We only want them to be able to import the Client from here
+
 
 class PyAnimeList(object):
     """
     An asynchronous API wrapper for the MyAnimeList API (Which is awful, where's this new one we were promised?)
     """
-
-    def __init__(self, username: str, password: str, user_agent: str = None):
+    def __init__(self, username: str, password: str, enable_scraper: bool = False, user_agent: str = None):
         """
-        :param username: the username of the account that is being used to access the API
-        :param password: the password of the account that is being used to access the API
-        :param user_agent: useragent of the application
+        :param str username: The username of the account that is being used to access the API
+        :param str password: The password of the account that is being used to access the API
+        :param bool enable_scraper:
+        :param str user_agent: UserAgent of the application
         """
         self.user_agent = user_agent or UA
         self._auth = aiohttp.BasicAuth(login=username, password=password)
 
-    async def verify_credentials(self) -> Tuple[str]:
+    async def verify_credentials(self) -> Tuple[str, str]:
         """
         This function is used for verifying if a users information is correct, it uses the username and password passed into self._auth)
         :return: The id and the username of the verified user

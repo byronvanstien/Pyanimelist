@@ -10,3 +10,4 @@ dicttoxml = "*"
 
 [dev-packages]
 sphinx-theme-pd = "*"
+sphinx = "*"

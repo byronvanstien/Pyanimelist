@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 from pyanimelist.constants import LIBRARY_URL
 from pyanimelist import (
-    __license__ as license,
-    __author__ as author,
     __title__ as title,
+    __author__ as author,
+    __license__ as license,
     __version__ as version
 )
 
@@ -26,6 +26,12 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
         'Topic :: Software Development :: Libraries'
     ],
-    keywords="aiohttp asyncio myanimelist xml parsing",
+    keywords=[
+        "aiohttp",
+        "asyncio",
+        "myanimelist",
+        "xml",
+        "parsing"
+    ],
     install_requires=['aiohttp', 'bs4', 'lxml', 'dicttoxml'],
 )

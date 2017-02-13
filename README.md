@@ -2,7 +2,7 @@
 An asynchronous Python 3 wrapper for the MyAnimeList API
 
 ### Requirements
-See `requirements.txt`
+See `Pipfile`
 
 ### Easy install guide for Requirements
 ```
@@ -11,7 +11,7 @@ python3 pip install -r requirements.txt
 
 # Installing PyAnimeList
 ### Notice
-**some people have trouble compiling lxml, if you find yourself having trouble installing lxml on windows, if any troubles arise you should use a precompiled whl file**
+**Some people have trouble compiling lxml, if you find yourself having trouble installing lxml on windows, if any troubles arise you should use a wheel**
 
  Install from pip
  ```
